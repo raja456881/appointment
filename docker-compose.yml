@@ -1,0 +1,37 @@
+version: '3'
+
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    command: python manage.py runserver 127.0.0.1:8000
+    volumes:
+      - .:/app
+    # depends_on:
+    #   - db
+    environment:
+      - DJANGO_SETTINGS_MODULE=appointment.settings
+
+  # db:
+  #   image: postgres
+  #   environment:
+  #     - POSTGRES_USER=<your_db_user>
+  #     - POSTGRES_PASSWORD=<your_db_password>
+  #     - POSTGRES_DB=<your_db_name>
+
+  celery_worker:
+    build: .
+    command: celery -A appointment worker -l info
+    volumes:
+      - .:/app
+    # depends_on:
+    #   - db
+
+  celery_beat:
+    build: .
+    command: celery -A appointment beat -l info
+    volumes:
+      - .:/app
+    # depends_on:
+    #   - db
