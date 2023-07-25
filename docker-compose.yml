@@ -1,20 +1,28 @@
+
 version: '3'
 
 services:
   web:
     build: .
+    restart: always
     ports:
       - "8000:8000"
     command: python manage.py runserver 127.0.0.1:8000
     volumes:
       - .:/app
-    # depends_on:
-    #   - db
+    env_file:
+      - ./.env
+
+    depends_on:
+      - redis
     environment:
       - DJANGO_SETTINGS_MODULE=appointment.settings
+      - REDIS_HOST=redis
 
-  # db:
-  #   image: postgres
+  redis:
+    restart: always
+    image: redis:latest 
+
   #   environment:
   #     - POSTGRES_USER=<your_db_user>
   #     - POSTGRES_PASSWORD=<your_db_password>
@@ -22,16 +30,18 @@ services:
 
   celery_worker:
     build: .
+    restart: always
     command: celery -A appointment worker -l info
     volumes:
       - .:/app
-    # depends_on:
-    #   - db
+    depends_on:
+      - redis
 
   celery_beat:
     build: .
+    restart: always
     command: celery -A appointment beat -l info
     volumes:
       - .:/app
-    # depends_on:
-    #   - db
+    depends_on:
+      - redis
